@@ -24,3 +24,10 @@ export async function addPassToGoogle(
   console.log('sending request: ', options);
   return await AlzaReactNativePaymentPass.addPassToGoogle(options);
 }
+
+export async function addPaymentPassToAppleWallet(
+  cardholderName: String, last4: String, paymentReferenceID: String
+): Promise<boolean> {
+  console.log('sending request: ', cardholderName, last4, paymentReferenceID);
+  return await AlzaReactNativePaymentPass.addPaymentPassToAppleWallet(cardholderName, last4, paymentReferenceID);
+}

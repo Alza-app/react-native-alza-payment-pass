@@ -2,12 +2,14 @@ import ExpoModulesCore
 import PassKit
 
 public class AlzaReactNativePaymentPassModule: Module {
+    //    private var pickingContext: PickingContext?
+    
     public func definition() -> ModuleDefinition {
         Name("AlzaReactNativePaymentPass")
         
         View(AlzaReactNativePaymentPassView.self) {
             Events("onAddButtonPress")
-            
+
             Prop("iosButtonStyle") { (view, style: iosButtonStyle) in
                 print ("prop:iosButtonStyle", style)
                 switch style {
@@ -19,34 +21,41 @@ public class AlzaReactNativePaymentPassModule: Module {
             }
         }
         
-        Function("canAddPaymentPass") { (paymentReferenceID: String) -> String in
-            print("checking if we can add")
+        AsyncFunction("asyncCanAddPaymentPass") { (paymentReferenceID: String, promise: Promise) in
             if PKAddPaymentPassViewController.canAddPaymentPass() {
                 if PKPassLibrary().canAddPaymentPass(withPrimaryAccountIdentifier: paymentReferenceID) {
-                    return "CAN_ADD"
+                    promise.resolve("CAN_ADD")
                 } else {
-                    return "ALREADY_ADDED"
+                    promise.resolve("ALREADY_ADDED")
                 }
             } else {
-                return "UNABLE_TO_CHECK"
+                promise.resolve("UNABLE_TO_CHECK")
+            }
+        }
+        
+        AsyncFunction("addPaymentPassToAppleWallet") { (cardholderName: String, last4: String, paymentReferenceID: String, promise: Promise) in
+            guard let currentVc = appContext?.utilities?.currentViewController() else {
+                throw MissingViewControllerException()
+            }
+            guard let requestConfiguration = PKAddPaymentPassRequestConfiguration(encryptionScheme: .ECC_V2) else {
+                promise.reject("Unable to init PKAddPaymentPassRequestConfiguration", "Error")
+                return
+            }
+            requestConfiguration.cardholderName = cardholderName
+            requestConfiguration.primaryAccountSuffix = last4
+            requestConfiguration.primaryAccountIdentifier = paymentReferenceID
+            debugPrint (requestConfiguration)
+            
+            let delegate = AddPaymentPassViewDelegate()
+            
+            guard let addPaymentPassViewController = PKAddPaymentPassViewController(requestConfiguration:
+                                                                        requestConfiguration, delegate: delegate) else {
+                promise.reject("Unable to init PKAddPaymentPassViewController", "Error")
+                return
             }
             
+            currentVc.present(addPaymentPassViewController, animated: true, completion: nil)
         }
-        
-        AsyncFunction("asyncCanAddPaymentPass") { (paymentReferenceID: String, promise: Promise) in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                if PKAddPaymentPassViewController.canAddPaymentPass() {
-                    if PKPassLibrary().canAddPaymentPass(withPrimaryAccountIdentifier: paymentReferenceID) {
-                        promise.resolve("CAN_ADD")
-                    } else {
-                        promise.resolve("ALREADY_ADDED")
-                    }
-                } else {
-                    promise.resolve("UNABLE_TO_CHECK")
-                }
-            }
-        }
-        
     }
     enum iosButtonStyle: String, Enumerable {
         case black

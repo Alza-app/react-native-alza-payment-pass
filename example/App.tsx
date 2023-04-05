@@ -1,9 +1,12 @@
 import {
   asyncCanAddPaymentPass,
   addPassToGoogle,
+  addPaymentPassToAppleWallet,
   CardNetwork,
   TokenProvider,
+  AlzaReactNativePaymentPassView,
 } from "alza-react-native-payment-pass";
+import { Platform } from "expo-modules-core";
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
@@ -18,7 +21,7 @@ export default function App() {
     })();
   }, []);
 
-  const onPress = useCallback(async () => {
+  const addCardToGoogleWallet = useCallback(async () => {
     console.log("add button pressed");
 
     const result = await addPassToGoogle({
@@ -40,21 +43,40 @@ export default function App() {
     console.log("result", result);
   }, []);
 
+  const addCardToApple = useCallback(async () => {
+    console.log("add button pressed");
+
+    const result = await addPaymentPassToAppleWallet(
+      "David Meadows",
+      "4242",
+      "ref"
+    );
+    console.log("result", result);
+  }, []);
+
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
       <Text>Async can add payment pass: {canAdd}</Text>
+      <Text>Add button to wallet</Text>
       <Pressable
-        style={{ height: 200, width: 200, backgroundColor: "red" }}
-        onPress={onPress}
-      >
-        {/* <AlzaReactNativePaymentPassView
-          iosButtonStyle="blackOutline"
-          style={{ backgroundColor: "purple", flex: 1 }}
-          onAddButtonPress={() => {
-            console.log("add button pressed");
-          }}
-        /> */}
-      </Pressable>
+        style={{ height: 100, width: 200 }}
+        onPress={addCardToGoogleWallet}
+      ></Pressable>
+      {Platform.OS === "ios" && (
+        <>
+          <Text>iOS Add to Apple Wallet Button</Text>
+          <View style={{ margin: 24, height: 60, width: 194 }}>
+            <AlzaReactNativePaymentPassView
+              iosButtonStyle="blackOutline"
+              style={{ flex: 1 }}
+              onAddButtonPress={() => {
+                addCardToApple();
+              }}
+            />
+          </View>
+        </>
+        // todo: android button
+      )}
     </View>
   );
 }
