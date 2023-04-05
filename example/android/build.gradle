@@ -38,10 +38,5 @@ allprojects {
         google()
         mavenCentral()
         maven { url 'https://www.jitpack.io' }
-        maven {
-            // This directory is precreated to store the TapAndPay SDK,
-            // which must be downloaded manually from Google.
-            url("file:${project.rootDir}/tapandpay_sdk/")
-        }
     }
 }
