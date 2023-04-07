@@ -1,6 +1,8 @@
 # react-native-alza-payment-pass
 
-sample
+## Prerequisites
+
+Unzip the Google tapandpay library into the `tapandpay` directory in the project root.
 
 ## Installation
 

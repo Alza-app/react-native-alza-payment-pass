@@ -17,10 +17,13 @@ const AlzaPaymentPass = NativeModules.AlzaPaymentPass
       }
     );
 
-export function canAddPaymentPass(): Promise<number> {
+export const PAYMENT_PASS_RESULT_SUCCESSFUL = 'PAYMENT_PASS_RESULT_SUCCESSFUL';
+export const PAYMENT_PASS_RESULT_FAILED = 'PAYMENT_PASS_RESULT_FAILED';
+
+export function canAddPaymentPass(): Promise<string> {
   return AlzaPaymentPass.canAddPaymentPass();
 }
 
-export function addPassToGoogle(options: any): Promise<number> {
+export function addPassToGoogle(options: any): Promise<string> {
   return AlzaPaymentPass.addPassToGoogle(options);
 }

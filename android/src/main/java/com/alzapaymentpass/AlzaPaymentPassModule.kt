@@ -97,8 +97,8 @@ class AlzaPaymentPassModule(reactContext: ReactApplicationContext) :
     const val NAME = "AlzaPaymentPass"
     private const val REQUEST_CODE_PUSH_TOKENIZE = 3
     private const val REQUEST_CREATE_WALLET = 4
-    private const val PAYMENT_PASS_RESULT_FAILED = 0
-    private const val PAYMENT_PASS_RESULT_SUCCESSFUL = 1
+    private const val PAYMENT_PASS_RESULT_FAILED = "PAYMENT_PASS_RESULT_FAILED"
+    private const val PAYMENT_PASS_RESULT_SUCCESSFUL = "PAYMENT_PASS_RESULT_SUCCESSFUL"
     private val logger = Logger.getLogger("AlzaPaymentPassModule")
   }
 }
