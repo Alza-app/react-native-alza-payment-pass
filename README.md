@@ -40,6 +40,11 @@ await addPassToGoogle({
 })
 ```
 
+## Publishing
+
+Bump the `version` in `package.json`
+Run `npm pack`
+
 ## Troubleshooting
 
 If the app insta-crashes on iOS, make sure you run `bundle exec pod install` under `example/ios` and try running again.
