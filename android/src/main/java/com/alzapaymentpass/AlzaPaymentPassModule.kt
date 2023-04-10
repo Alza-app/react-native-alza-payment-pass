@@ -35,7 +35,7 @@ class AlzaPaymentPassModule(reactContext: ReactApplicationContext) :
           val apiException = it.exception as ApiException
           if (apiException.statusCode == TAP_AND_PAY_NO_ACTIVE_WALLET) {
             tapAndPayClient.createWallet(currentActivity!!, REQUEST_CREATE_WALLET)
-            canAddPaymentPass(promise)
+            canAddPaymentPass(uniqueCardReferenceID, promise)
           } else {
             promise.resolve(PAYMENT_PASS_RESULT_SUCCESSFUL)
           }
