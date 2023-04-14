@@ -100,6 +100,7 @@ class AlzaPaymentPassModule(reactContext: ReactApplicationContext) :
       return
     }
     if (!isDefaultWallet()) {
+      logger.log(Level.WARNING, "isDefaultWallet() returned false, cannot request provision")
       promise.resolve(PAYMENT_PASS_RESULT_FAILED)
       return
     }
