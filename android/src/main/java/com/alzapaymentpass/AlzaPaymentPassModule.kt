@@ -101,6 +101,7 @@ class AlzaPaymentPassModule(reactContext: ReactApplicationContext) :
     }
     if (!isDefaultWallet()) {
       promise.resolve(PAYMENT_PASS_RESULT_FAILED)
+      return
     }
     val tapAndPayClient = TapAndPay.getClient(currentActivity!!)
     tapAndPayClient
