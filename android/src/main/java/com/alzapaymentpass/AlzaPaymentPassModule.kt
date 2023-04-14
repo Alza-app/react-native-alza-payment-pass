@@ -1,8 +1,14 @@
 package com.alzapaymentpass
 
 import android.app.Activity
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.nfc.NfcManager
+import android.nfc.cardemulation.CardEmulation
+import android.view.View
 import com.facebook.react.bridge.*
+import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tapandpay.TapAndPay
 import com.google.android.gms.tapandpay.TapAndPayStatusCodes.*
@@ -63,6 +69,28 @@ class AlzaPaymentPassModule(reactContext: ReactApplicationContext) :
     reactContext.addActivityEventListener(activityEventListener);
   }
 
+  /**
+   * This method shows how to check whether or not Google Pay is the default HCE wallet for NFC
+   * payments. See the documentation here:
+   * https://developers.google.com/pay/issuers/apis/push-provisioning/android/set-nfc-wallet
+   *
+   * @return - true if Google Pay is the default, false otherwise
+   */
+  private fun isDefaultWallet(): Boolean {
+    val nfcManager = currentActivity?.getSystemService(Context.NFC_SERVICE) as? NfcManager
+    val adapter = nfcManager?.defaultAdapter
+    // if nfc hardware is not available, this will be null
+    return if (adapter != null) {
+      val emulation = CardEmulation.getInstance(adapter)
+      emulation.isDefaultServiceForCategory(
+        ComponentName(GoogleApiAvailability.GOOGLE_PLAY_SERVICES_PACKAGE, GOOGLE_PAY_TP_HCE_SERVICE),
+        CardEmulation.CATEGORY_PAYMENT
+      )
+    } else {
+      false
+    }
+  }
+
   @ReactMethod
   fun canAddPaymentPass(uniqueCardReferenceID: String, promise: Promise) {
     // TODO: Do we need to also check that Google Pay is the default HCE wallet for NFC payments?
@@ -70,6 +98,9 @@ class AlzaPaymentPassModule(reactContext: ReactApplicationContext) :
       logger.log(Level.WARNING, "currentActivity is null, cannot request provision")
       promise.resolve(PAYMENT_PASS_RESULT_FAILED)
       return
+    }
+    if (!isDefaultWallet()) {
+      promise.resolve(PAYMENT_PASS_RESULT_FAILED)
     }
     val tapAndPayClient = TapAndPay.getClient(currentActivity!!)
     tapAndPayClient
@@ -154,6 +185,8 @@ class AlzaPaymentPassModule(reactContext: ReactApplicationContext) :
 
   companion object {
     const val NAME = "AlzaPaymentPass"
+    const val GOOGLE_PAY_TP_HCE_SERVICE =
+      "com.google.android.gms.tapandpay.hce.service.TpHceService"
     private const val REQUEST_CODE_PUSH_TOKENIZE = 3
     private const val REQUEST_CREATE_WALLET = 4
     private const val PAYMENT_PASS_RESULT_FAILED = "PAYMENT_PASS_RESULT_FAILED"
