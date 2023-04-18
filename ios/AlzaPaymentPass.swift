@@ -14,6 +14,14 @@ class AlzaPaymentPass: NSObject {
     @objc static func requiresMainQueueSetup() -> Bool {
         return false
     }
+
+    @objc(isCardInWallet:resolve:rejecter:)
+    func isCardInWallet(_ uniqueCardReferenceID: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+        let passLibrary = PKPassLibrary()
+        let allPaymentPasses = passLibrary.passes(of: .payment).compactMap({$0 as? PKPaymentPass}) + passLibrary.remotePaymentPasses()
+        let hasPaymentPass = allPaymentPasses.contains(where: {$0.primaryAccountIdentifier == uniqueCardReferenceID})
+        resolve(hasPaymentPass);
+    }
     
     @objc(canAddPaymentPass:resolve:rejecter:)
     func canAddPaymentPass(_ uniqueCardReferenceID: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {

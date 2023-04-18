@@ -28,5 +28,10 @@ RCT_EXTERN_METHOD(
                   resolve: (RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject
                   )
-@end
 
+RCT_EXTERN_METHOD(
+                  isCardInWallet: (NSString *) uniqueCardReferenceID
+                  resolve: (RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject
+                  )
+@end

@@ -26,6 +26,12 @@ export function canAddPaymentPass(
   return AlzaPaymentPass.canAddPaymentPass(uniqueCardReferenceID);
 }
 
+export function isCardInWallet(
+  uniqueCardReferenceID: string
+): Promise<boolean> {
+  return AlzaPaymentPass.isCardInWallet(uniqueCardReferenceID);
+}
+
 export function addPassToGoogle(options: any): Promise<string> {
   return AlzaPaymentPass.addPassToGoogle(options);
 }
