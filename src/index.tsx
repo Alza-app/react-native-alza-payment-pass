@@ -20,10 +20,8 @@ const AlzaPaymentPass = NativeModules.AlzaPaymentPass
 export const PAYMENT_PASS_RESULT_SUCCESSFUL = 'PAYMENT_PASS_RESULT_SUCCESSFUL';
 export const PAYMENT_PASS_RESULT_FAILED = 'PAYMENT_PASS_RESULT_FAILED';
 
-export function canAddPaymentPass(
-  uniqueCardReferenceID: string
-): Promise<string> {
-  return AlzaPaymentPass.canAddPaymentPass(uniqueCardReferenceID);
+export function canAddPaymentPass(options: any): Promise<string> {
+  return AlzaPaymentPass.canAddPaymentPass(options);
 }
 
 export function addPassToGoogle(options: any): Promise<string> {

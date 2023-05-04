@@ -11,7 +11,9 @@ import com.facebook.react.bridge.*
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tapandpay.TapAndPay
+import com.google.android.gms.tapandpay.TapAndPayClient
 import com.google.android.gms.tapandpay.TapAndPayStatusCodes.*
+import com.google.android.gms.tapandpay.issuer.IsTokenizedRequest
 import com.google.android.gms.tapandpay.issuer.PushTokenizeRequest
 import com.google.android.gms.tapandpay.issuer.UserAddress
 import java.nio.charset.Charset
@@ -91,32 +93,70 @@ class AlzaPaymentPassModule(reactContext: ReactApplicationContext) :
     }
   }
 
+  private fun cardAlreadyAddedToWallet(tapAndPayClient: TapAndPayClient, cardNetwork: Int, tokenServiceProvider: Int, last4: String, promise: Promise) {
+    val request = IsTokenizedRequest.Builder()
+      .setIdentifier(last4)
+      .setNetwork(cardNetwork)
+      .setTokenServiceProvider(tokenServiceProvider)
+      .build()
+
+    tapAndPayClient
+      .isTokenized(request)
+      .addOnCompleteListener {
+        if (it.isSuccessful) {
+          if (it.result) {
+            promise.resolve(CAN_ADD_PAYMENT_PASS_RESULT_ALREADY_ADDED)
+          } else {
+            promise.resolve(CAN_ADD_PAYMENT_PASS_RESULT_CAN_ADD)
+          }
+        } else {
+          logger.log(Level.WARNING, "exception when calling isTokenized: ${it.exception}")
+          promise.resolve(CAN_ADD_PAYMENT_PASS_RESULT_BLOCKED)
+        }
+      }
+  }
+
   @ReactMethod
-  fun canAddPaymentPass(uniqueCardReferenceID: String, promise: Promise) {
+  fun canAddPaymentPass(options: ReadableMap, promise: Promise) {
     // TODO: Do we need to also check that Google Pay is the default HCE wallet for NFC payments?
     if (currentActivity == null) {
       logger.log(Level.WARNING, "currentActivity is null, cannot request provision")
-      promise.resolve(PAYMENT_PASS_RESULT_FAILED)
+      promise.resolve(CAN_ADD_PAYMENT_PASS_RESULT_BLOCKED)
       return
     }
-    if (!isDefaultWallet()) {
-      logger.log(Level.WARNING, "isDefaultWallet() returned false, cannot request provision")
-      promise.resolve(PAYMENT_PASS_RESULT_FAILED)
-      return
+//    if (!isDefaultWallet()) {
+//      logger.log(Level.WARNING, "isDefaultWallet() returned false, cannot request provision")
+//      promise.resolve(CAN_ADD_PAYMENT_PASS_RESULT_BLOCKED)
+//      return
+//    }
+
+    val cardNetwork = options.requireInt("cardNetwork")
+    val tokenProvider = options.requireInt("tokenProvider")
+    val lastDigits = options.requireString("lastDigits")
+
+    if (cardNetwork != TapAndPay.CARD_NETWORK_MASTERCARD) {
+      promise.reject(CAN_ADD_PAYMENT_PASS_RESULT_BLOCKED, "cardNetwork must be 3 (CARD_NETWORK_MASTERCARD)")
     }
+    if (tokenProvider != TapAndPay.TOKEN_PROVIDER_MASTERCARD) {
+      promise.reject(CAN_ADD_PAYMENT_PASS_RESULT_BLOCKED, "tokenProvider must be 3 (TOKEN_PROVIDER_MASTERCARD)")
+    }
+
     val tapAndPayClient = TapAndPay.getClient(currentActivity!!)
+
+    val onSuccess = fun () = run { cardAlreadyAddedToWallet(tapAndPayClient, cardNetwork, tokenProvider, lastDigits, promise) }
+
     tapAndPayClient
       .activeWalletId
       .addOnCompleteListener {
         if (it.isSuccessful) {
-          promise.resolve(PAYMENT_PASS_RESULT_SUCCESSFUL)
+          onSuccess()
         } else {
           val apiException = it.exception as ApiException
           if (apiException.statusCode == TAP_AND_PAY_NO_ACTIVE_WALLET) {
             tapAndPayClient.createWallet(currentActivity!!, REQUEST_CREATE_WALLET)
-            canAddPaymentPass(uniqueCardReferenceID, promise)
+            canAddPaymentPass(options, promise)
           } else {
-            promise.resolve(PAYMENT_PASS_RESULT_SUCCESSFUL)
+            onSuccess()
           }
         }
       }
@@ -193,6 +233,9 @@ class AlzaPaymentPassModule(reactContext: ReactApplicationContext) :
     private const val REQUEST_CREATE_WALLET = 4
     private const val PAYMENT_PASS_RESULT_FAILED = "PAYMENT_PASS_RESULT_FAILED"
     private const val PAYMENT_PASS_RESULT_SUCCESSFUL = "PAYMENT_PASS_RESULT_SUCCESSFUL"
+    private const val CAN_ADD_PAYMENT_PASS_RESULT_CAN_ADD = "CAN_ADD"
+    private const val CAN_ADD_PAYMENT_PASS_RESULT_ALREADY_ADDED = "ALREADY_ADDED"
+    private const val CAN_ADD_PAYMENT_PASS_RESULT_BLOCKED = "BLOCKED"
     private val logger = Logger.getLogger("AlzaPaymentPassModule")
   }
 }

@@ -16,7 +16,11 @@ export default function App() {
 
   React.useEffect(() => {
     if (!result) {
-      canAddPaymentPass('ref').then((canAddResult) => {
+      canAddPaymentPass({
+        cardNetwork: 3,
+        tokenProvider: 3,
+        lastDigits: '4242',
+      }).then((canAddResult) => {
         setResult(canAddResult);
       });
     }
