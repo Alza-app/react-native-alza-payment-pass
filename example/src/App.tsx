@@ -1,32 +1,89 @@
 import * as React from 'react';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import {
+  AppState,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import {
+  CanAddPaymentPassResult,
   addPassToAppleWallet,
   addPassToGoogle,
   canAddPaymentPass,
 } from 'react-native-alza-payment-pass';
 
+export const useCanAddCardToDigitalWallet =
+  (): null | CanAddPaymentPassResult => {
+    const [canAdd, setCanAdd] = useState<null | CanAddPaymentPassResult>(null);
+    const appState = useRef(AppState.currentState);
+    const [appStateVisible, setAppStateVisible] = useState(appState.current);
+
+    useEffect(() => {
+      const check = async () => {
+        // should really check that this is an emulator since that won't work on android
+
+        let result = null;
+        switch (Platform.OS) {
+          case 'ios':
+            result = await canAddPaymentPass('ref');
+            break;
+          case 'android':
+            result = await canAddPaymentPass({
+              cardNetwork: 3,
+              tokenProvider: 3,
+              lastDigits: '4242',
+            });
+            break;
+          default:
+            throw new Error('Unsupported platform: ' + Platform.OS);
+        }
+
+        console.log('result', result);
+        switch (result) {
+          case 'CAN_ADD':
+          case 'ALREADY_ADDED':
+          case 'BLOCKED':
+            setCanAdd(result);
+            break;
+          default:
+            console.error('Unexpected result from canAddPaymentPass', result);
+            setCanAdd('BLOCKED');
+        }
+      };
+      check();
+    }, [appStateVisible]);
+
+    useEffect(() => {
+      const subscription = AppState.addEventListener(
+        'change',
+        (nextAppState) => {
+          appState.current = nextAppState;
+          setAppStateVisible(appState.current);
+          console.log('AppState', appState.current);
+        }
+      );
+
+      return () => {
+        subscription.remove();
+      };
+    }, []);
+    return canAdd;
+  };
+
 // Make sure you set the OPC in your .env file
 const OPC = process.env.OPC;
 
 export default function App() {
-  const [result, setResult] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    if (!result) {
-      canAddPaymentPass({
-        cardNetwork: 3,
-        tokenProvider: 3,
-        lastDigits: '4242',
-      }).then((canAddResult) => {
-        setResult(canAddResult);
-      });
-    }
-  }, [result]);
+  const canAdd = useCanAddCardToDigitalWallet();
 
   const addToGoogle = useCallback(async () => {
+    if (!OPC) {
+      throw new Error('OPC not set');
+    }
     console.log('add button pressed');
 
     addPassToGoogle({
@@ -77,7 +134,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text>Can add payment pass? {result}</Text>
+      <Text>Can add payment pass? {canAdd}</Text>
       <Pressable style={styles.button} onPress={onPress}>
         <Text style={styles.buttonText}>Add pass to {walletName}</Text>
       </Pressable>

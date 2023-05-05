@@ -124,11 +124,11 @@ class AlzaPaymentPassModule(reactContext: ReactApplicationContext) :
       promise.resolve(CAN_ADD_PAYMENT_PASS_RESULT_BLOCKED)
       return
     }
-//    if (!isDefaultWallet()) {
-//      logger.log(Level.WARNING, "isDefaultWallet() returned false, cannot request provision")
-//      promise.resolve(CAN_ADD_PAYMENT_PASS_RESULT_BLOCKED)
-//      return
-//    }
+    if (!isDefaultWallet()) {
+      logger.log(Level.WARNING, "isDefaultWallet() returned false, cannot request provision")
+      promise.resolve(CAN_ADD_PAYMENT_PASS_RESULT_BLOCKED)
+      return
+    }
 
     val cardNetwork = options.requireInt("cardNetwork")
     val tokenProvider = options.requireInt("tokenProvider")
