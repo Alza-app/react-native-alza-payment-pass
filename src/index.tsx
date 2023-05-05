@@ -17,16 +17,48 @@ const AlzaPaymentPass = NativeModules.AlzaPaymentPass
       }
     );
 
-export const PAYMENT_PASS_RESULT_SUCCESSFUL = 'PAYMENT_PASS_RESULT_SUCCESSFUL';
-export const PAYMENT_PASS_RESULT_FAILED = 'PAYMENT_PASS_RESULT_FAILED';
+export type CanAddPaymentPassResult = 'CAN_ADD' | 'ALREADY_ADDED' | 'BLOCKED';
+
+export type CanAddPaymentPassArguments =
+  // android args
+  | {
+      cardNetwork: number;
+      tokenProvider: number;
+      lastDigits: string;
+    }
+  // ios arg (uniqueCardReferenceID)
+  | string;
 
 export function canAddPaymentPass(
-  uniqueCardReferenceID: string
-): Promise<string> {
-  return AlzaPaymentPass.canAddPaymentPass(uniqueCardReferenceID);
+  options: CanAddPaymentPassArguments
+): Promise<CanAddPaymentPassResult> {
+  return AlzaPaymentPass.canAddPaymentPass(options);
 }
 
-export function addPassToGoogle(options: any): Promise<string> {
+export type AddPassToGoogleArguments = {
+  opc: string;
+  cardNetwork: number;
+  tokenProvider: number;
+  displayName: string;
+  lastDigits: string;
+  userAddress: {
+    name: string;
+    address1: string;
+    locality: string;
+    administrativeArea: string;
+    countryCode: string;
+    postalCode: string;
+    phoneNumber: string;
+  };
+};
+
+export type AddPassToGoogleResult =
+  | 'PAYMENT_PASS_RESULT_SUCCESSFUL'
+  | 'PAYMENT_PASS_RESULT_FAILED';
+
+export function addPassToGoogle(
+  options: AddPassToGoogleArguments
+): Promise<AddPassToGoogleResult> {
   return AlzaPaymentPass.addPassToGoogle(options);
 }
 
